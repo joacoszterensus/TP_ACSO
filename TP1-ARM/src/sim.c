@@ -72,7 +72,11 @@ void process_instruction() {
             break;
         }
     }
-    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+}
+
+int64_t signextend64(uint32_t value, int bits) {
+    int shift = 64 - bits;
+    return ((int64_t)value << shift) >> shift;
 }
 
 void execute_adds_inmediate(uint32_t instruction) {
@@ -90,9 +94,11 @@ void execute_adds_inmediate(uint32_t instruction) {
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
     NEXT_STATE.REGS[rd] = result;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);            
     
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_adds_extended_register(uint32_t instruction) {
@@ -110,8 +116,11 @@ void execute_adds_extended_register(uint32_t instruction) {
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
     NEXT_STATE.REGS[rd] = result;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);       
+    
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_sub_inmediate(uint32_t instruction) {
@@ -129,8 +138,11 @@ void execute_sub_inmediate(uint32_t instruction) {
     int64_t result = CURRENT_STATE.REGS[rn] - operand2;
     NEXT_STATE.REGS[rd] = -result;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);            
+
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_sub_extended_register(uint32_t instruction) {
@@ -148,13 +160,19 @@ void execute_sub_extended_register(uint32_t instruction) {
     int64_t result = CURRENT_STATE.REGS[rn] - operand2;
     NEXT_STATE.REGS[rd] = result;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);            
+
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_HLT(uint32_t instruction) {
 
     RUN_BIT = 0;
+    
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
     return;
 }
 
@@ -172,8 +190,11 @@ void execute_CMP_inmediate(uint32_t instruction) {
     uint64_t result = CURRENT_STATE.REGS[rn] - operand2;
 
     // Actualizar flags de condición
-    NEXT_STATE.FLAG_N = (result >> 63) & 1; // Flag de signo (negativo)
-    NEXT_STATE.FLAG_Z = (result == 0);      // Flag de cero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1; 
+    NEXT_STATE.FLAG_Z = (result == 0);      
+    
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_CMP_extended_register(uint32_t instruction) {
@@ -189,8 +210,11 @@ void execute_CMP_extended_register(uint32_t instruction) {
 
     uint64_t result = CURRENT_STATE.REGS[rn] - operand2;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);             
+    
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_ands_shifted_register(uint32_t instruction) {
@@ -205,8 +229,11 @@ void execute_ands_shifted_register(uint32_t instruction) {
     uint64_t result = CURRENT_STATE.REGS[rn] & operand2;
     NEXT_STATE.REGS[rd] = result;
 
-    NEXT_STATE.FLAG_N = (result >> 63) & 1;        // Negative
-    NEXT_STATE.FLAG_Z = (result == 0);             // Zero
+    NEXT_STATE.FLAG_N = (result >> 63) & 1;        
+    NEXT_STATE.FLAG_Z = (result == 0);             
+
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
 }
 
 void execute_eor_shifted_register(uint32_t instruction) {
@@ -218,6 +245,8 @@ void execute_eor_shifted_register(uint32_t instruction) {
 
     uint64_t result = CURRENT_STATE.REGS[rn] ^ operand2;
     NEXT_STATE.REGS[rd] = result;
+
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 
 }
 
@@ -234,22 +263,15 @@ void execute_orr_shifted_register(uint32_t instruction) {
 }
 
 void execute_b_target(uint32_t instruction) {
-    // Extraer imm26 (bits 0-25)
     int64_t imm26 = instruction & 0x03FFFFFF;
-    
-    // Sign-extend a 64 bits y agregar '00' de manera segura
-    int64_t offset = (imm26 << 38) >> 36;  // Corrección: primero castear a int64_t
-    
-    // Versión alternativa más explícita:
-    // int64_t offset = ((int64_t)imm26 << 38) >> 36;
+    int64_t offset = signextend64(imm26, 26) << 2;
     
     NEXT_STATE.PC = CURRENT_STATE.PC + offset;
-    printf("B branch to: 0x%016lx\n", NEXT_STATE.PC);
 }
 
 void execute_br(uint32_t instruction) {
-    uint32_t rn = (instruction >> 5) & 0x1F;  // Extraer bits 5-9 (Rn)
-    NEXT_STATE.PC = CURRENT_STATE.REGS[rn];   // Saltar a la dirección en el registro
+    uint32_t rn = (instruction >> 5) & 0x1F;  
+    NEXT_STATE.PC = CURRENT_STATE.REGS[rn];   
 }
 
 void execute_b_conditional(uint32_t instruction) {
@@ -263,60 +285,57 @@ void execute_b_conditional(uint32_t instruction) {
     }
 }
 
-
 void execute_b_eq(uint32_t instruction) {
     if (CURRENT_STATE.FLAG_Z) {
-        printf("BEQ instruction: 0x%08X\n", instruction);
-        
-        // 1. Extraer imm19 (bits 5-23) y extender signo
         int32_t imm19 = (instruction >> 5) & 0x7FFFF;
-        printf("imm19 raw: 0x%05X\n", imm19);
-        
-        // 2. Convertir a offset de bytes (imm19*4) con extensión de signo
         int64_t offset = signextend64(imm19, 19) << 2;
         
-        // 3. Compensar el +4 que hará process_instruction()
-        offset -= 4;
-        
-        printf("offset calculated: 0x%016lX\n", offset);
-        
-        // 4. Actualizar PC
-        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
-        printf("BEQ taken: PC = 0x%016lX + 0x%016lX = 0x%016lX\n", 
-               CURRENT_STATE.PC, offset, NEXT_STATE.PC);
-    } else {
-        printf("BEQ not taken (Z=0)\n");
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;     
     }
-
 }
 
 void execute_b_ne(uint32_t instruction) {
     if (!CURRENT_STATE.FLAG_Z) { 
-        execute_b_target(instruction);
+        int32_t imm19 = (instruction >> 5) & 0x7FFFF;
+        int64_t offset = signextend64(imm19, 19) << 2;
+        
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;    
     }
 }
 
 void execute_b_gt(uint32_t instruction) {
     if (CURRENT_STATE.FLAG_Z==0 && CURRENT_STATE.FLAG_N==0) { 
-        execute_b_target(instruction);
+        int32_t imm19 = (instruction >> 5) & 0x7FFFF;
+        int64_t offset = signextend64(imm19, 19) << 2;
+        
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;    
     }
 }
 
 void execute_b_lt(uint32_t instruction) {
     if (CURRENT_STATE.FLAG_N) { 
-        execute_b_target(instruction);
+        int32_t imm19 = (instruction >> 5) & 0x7FFFF;
+        int64_t offset = signextend64(imm19, 19) << 2;
+        
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;    
     }
 }
 
 void execute_b_ge(uint32_t instruction) {
     if (CURRENT_STATE.FLAG_N==0) { 
-        execute_b_target(instruction);
+        int32_t imm19 = (instruction >> 5) & 0x7FFFF;
+        int64_t offset = signextend64(imm19, 19) << 2;
+        
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;    
     }
 }
 
 void execute_b_le(uint32_t instruction) {
     if ( ! (CURRENT_STATE.FLAG_Z==0 && CURRENT_STATE.FLAG_N==0)) { 
-        execute_b_target(instruction);
+        int32_t imm19 = (instruction >> 5) & 0x7FFFF;
+        int64_t offset = signextend64(imm19, 19) << 2;
+        
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;    
     }
 }
 
