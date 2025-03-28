@@ -62,7 +62,7 @@ InstructionEntry instruction_set[] = {
     {0xF84    << 20, 0xFFF00000, execute_ldur},
     {0x784    << 20, 0xFFF00000, execute_ldur_h},
     {0x384    << 20, 0xFFF00000, execute_ldur_b},
-    {0xD28    << 20, 0xFFF00000, execute_movz},
+    {0xD2     << 24, 0xFF000000, execute_movz},
     
     {0, 0, NULL} 
 };
@@ -385,7 +385,7 @@ void execute_l_sx(uint32_t instruction) {
         operand2 = CURRENT_STATE.REGS[rn] >> shift;
     }
     else if (imms != 0b111111) {
-        operand2 = CURRENT_STATE.REGS[rn] << shift;
+        operand2 = CURRENT_STATE.REGS[rn] <<64- shift;
     }
     NEXT_STATE.REGS[rd] = operand2;
            
@@ -397,14 +397,12 @@ void execute_stur(uint32_t instruction) {
     uint32_t rn = (instruction >> 5) & 0x1F;   
     int32_t imm9 = (instruction >> 12) & 0x1FF; 
     
-    imm9 = (imm9 << 23) >> 23;  
+    imm9 = signextend64(imm9, 9);  
     
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
     mem_write_32(address, CURRENT_STATE.REGS[rt]);
     
-    printf("STUR: [X%u + #%d] = X%u (0x%08X)\n", 
-           rn, imm9, rt, CURRENT_STATE.REGS[rt]);
     
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
@@ -414,20 +412,16 @@ void execute_stur_b(uint32_t instruction) {
     uint32_t rn = (instruction >> 5) & 0x1F;   
     int32_t imm9 = (instruction >> 12) & 0x1FF; 
     
-    imm9 = (imm9 << 23) >> 23;
+    imm9 = signextend64(imm9, 9);
     
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
-    uint8_t byte_to_store = CURRENT_STATE.REGS[rt] & 0xFF;
+    uint32_t byte_to_store = CURRENT_STATE.REGS[rt] & 0xFF;
     
-    mem_write_8(address, byte_to_store);
+    mem_write_32(address, byte_to_store);
     
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 
-
-    // 6. Debug
-    printf("STURB: [X%u + #%d] = X%u[7:0] (0x%02X)\n", 
-           rn, imm9, rt, byte_to_store);
 }
 
 void execute_stur_h(uint32_t instruction) {
@@ -435,108 +429,86 @@ void execute_stur_h(uint32_t instruction) {
     uint32_t rn = (instruction >> 5) & 0x1F;   
     int32_t imm9 = (instruction >> 12) & 0x1FF; 
     
-    imm9 = (imm9 << 23) >> 23;
+    imm9 = signextend64(imm9, 9);
     
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
-    uint16_t halfword_to_store = CURRENT_STATE.REGS[rt] & 0xFFFF;
+    uint32_t byte_to_store = CURRENT_STATE.REGS[rt] & 0xFFFF;
     
-    mem_write_16(address, halfword_to_store);
-
+    mem_write_32(address, byte_to_store);
+    
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-    
-    printf("STURH: [X%u + #%d] = W%u[15:0] (0x%04X)\n", 
-           rn, imm9, rt, halfword_to_store);
+
 }
+
 
 void execute_ldur(uint32_t instruction) {
-    // 1. Extraer campos
-    uint32_t rt = (instruction >> 0) & 0x1F;   // Bits 0-4: Registro destino (X1)
-    uint32_t rn = (instruction >> 5) & 0x1F;   // Bits 5-9: Registro base (X2)
-    int32_t imm9 = (instruction >> 12) & 0x1FF; // Bits 12-20: Offset (9 bits con signo)
+    uint32_t rt = instruction & 0x1F;
+    uint32_t rn = (instruction >> 5) & 0x1F;
+    int64_t imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t size = (instruction >> 30) & 0x3;
+
+    imm9 = signextend64(imm9, 9);
     
-    // 2. Extender signo del offset (9 bits -> 32 bits)
-    imm9 = (imm9 << 23) >> 23;
-    
-    // 3. Calcular dirección efectiva
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
-    // 4. Leer 64 bits de memoria (little-endian)
-    uint64_t data = mem_read_64(address);
+    uint32_t low = mem_read_32(address);
+    uint32_t high = mem_read_32(address + 4);
     
-    // 5. Escribir en registro destino
+    uint64_t data = ((uint64_t) high << 32) | low;
+    
     NEXT_STATE.REGS[rt] = data;
-
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-
-    
-    // 6. Debug
-    printf("LDUR: X%u = [X%u + #%d] (0x%016lX)\n", 
-           rt, rn, imm9, data);
-    printf("  Dirección: 0x%016lX, Valor cargado: 0x%016lX\n",
-           address, data);
 }
+
 
 void execute_ldur_h(uint32_t instruction) {
-    uint32_t rt = (instruction >> 0) & 0x1F;   
-    uint32_t rn = (instruction >> 5) & 0x1F; 
-    int32_t imm9 = (instruction >> 12) & 0x1FF; 
-    
-    imm9 = (imm9 << 23) >> 23;
+    uint32_t rt = instruction & 0x1F;
+    uint32_t rn = (instruction >> 5) & 0x1F;
+    int64_t imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t size = (instruction >> 30) & 0x3;
+
+    imm9 = signextend64(imm9, 9);
     
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
-    uint16_t data = mem_read_16(address);
+    uint32_t low = mem_read_32(address);
+    uint32_t high = mem_read_32(address + 4);
     
-    NEXT_STATE.REGS[rt] = (uint64_t)data;  
+    uint64_t data = ((uint64_t) high << 32) | low;
     
-    printf("LDURH: W%u = [X%u + #%d] (0x%04X -> 0x%016lX)\n", 
-           rt, rn, imm9, data, NEXT_STATE.REGS[rt]);
-    
-
+    NEXT_STATE.REGS[rt] = data & 0xFFFF;
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
 
-void execute_ldurb(uint32_t instruction) {
-    // 1. Extraer campos
-    uint32_t rt = (instruction >> 0) & 0x1F;   // Bits 0-4: Registro destino (W1/X1)
-    uint32_t rn = (instruction >> 5) & 0x1F;   // Bits 5-9: Registro base (X2)
-    int32_t imm9 = (instruction >> 12) & 0x1FF; // Bits 12-20: Offset (9 bits con signo)
+
+void execute_ldur_b(uint32_t instruction) {
+    uint32_t rt = instruction & 0x1F;
+    uint32_t rn = (instruction >> 5) & 0x1F;
+    int64_t imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t size = (instruction >> 30) & 0x3;
+
+    imm9 = signextend64(imm9, 9);
     
-    // 2. Extender signo del offset (9 bits -> 32 bits)
-    imm9 = (imm9 << 23) >> 23;
-    
-    // 3. Calcular dirección efectiva
     uint64_t address = CURRENT_STATE.REGS[rn] + imm9;
     
-    // 4. Leer byte de memoria
-    uint8_t byte = mem_read_8(address);
+    uint32_t low = mem_read_32(address);
+    uint32_t high = mem_read_32(address + 4);
     
-    // 5. Extender a 64 bits con ceros (bits 63:8 = 0)
-    NEXT_STATE.REGS[rt] = (uint64_t)byte;
+    uint64_t data = ((uint64_t) high << 32) | low;
     
-    // 6. Actualizar PC
+    NEXT_STATE.REGS[rt] = data & 0xFF;
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-
-    // 6. Debug
-    printf("LDURB: W%u = [X%u + #%d] (0x%02X -> 0x%016lX)\n", 
-           rt, rn, imm9, byte, NEXT_STATE.REGS[rt]);
 }
 
 void execute_movz(uint32_t instruction) {
-    // 1. Extraer campos
-    uint32_t rd = (instruction >> 0) & 0x1F;    // Bits 0-4: Registro destino (X1)
-    uint32_t imm16 = (instruction >> 5) & 0xFFFF; // Bits 5-20: Valor inmediato
-    uint32_t hw = (instruction >> 21) & 0x3;    // Bits 21-22: Posición del desplazamiento
+    uint32_t rd = (instruction >> 0) & 0x1F;    
+    uint32_t imm16 = (instruction >> 5) & 0xFFFF; 
+    uint32_t hw = (instruction >> 21) & 0x3;   
     
-    // 2. Solo implementamos hw = 0 (sin desplazamiento)
     if (hw == 0) {
-        NEXT_STATE.REGS[rd] = imm16;  // X1 = imm16 (bits 63:16 = 0)
-        printf("MOVZ: X%u = %u (0x%04X)\n", rd, imm16, imm16);
-    } else {
-        printf("MOVZ con hw != 0 no implementado\n");
+        NEXT_STATE.REGS[rd] = imm16;  
     }
-    
-    
+
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
