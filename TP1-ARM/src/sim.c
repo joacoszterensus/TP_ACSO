@@ -30,7 +30,11 @@ void execute_ldur(uint32_t instruction);
 void execute_ldur_h(uint32_t instruction);
 void execute_ldur_b(uint32_t instruction);
 void execute_movz(uint32_t instruction);
-
+void execute_add_inmediate(uint32_t instruction);
+void execute_add_extended_register(uint32_t instruction);
+void execute_mul(uint32_t instruction);
+void execute_cbz(uint32_t instruction);
+void execute_cbnz(uint32_t instruction);
 
 
 typedef void (*InstructionFunction)(uint32_t instruction);
@@ -63,6 +67,11 @@ InstructionEntry instruction_set[] = {
     {0x784    << 20, 0xFFF00000, execute_ldur_h},
     {0x384    << 20, 0xFFF00000, execute_ldur_b},
     {0xD2     << 24, 0xFF000000, execute_movz},
+    {0x91     << 24, 0xFF000000, execute_add_inmediate},        
+    {0x8B0    << 20, 0xFFF00000, execute_add_extended_register},
+    {0x9B0    << 20, 0xFFF00000, execute_mul},
+    {0xB4     << 24, 0xFF000000, execute_cbz},
+    {0xB5     << 24, 0xFF000000, execute_cbnz},                    
     
     {0, 0, NULL} 
 };
@@ -441,7 +450,6 @@ void execute_stur_h(uint32_t instruction) {
 
 }
 
-
 void execute_ldur(uint32_t instruction) {
     uint32_t rt = instruction & 0x1F;
     uint32_t rn = (instruction >> 5) & 0x1F;
@@ -461,7 +469,6 @@ void execute_ldur(uint32_t instruction) {
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
 
-
 void execute_ldur_h(uint32_t instruction) {
     uint32_t rt = instruction & 0x1F;
     uint32_t rn = (instruction >> 5) & 0x1F;
@@ -480,7 +487,6 @@ void execute_ldur_h(uint32_t instruction) {
     NEXT_STATE.REGS[rt] = data & 0xFFFF;
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
-
 
 void execute_ldur_b(uint32_t instruction) {
     uint32_t rt = instruction & 0x1F;
@@ -511,4 +517,79 @@ void execute_movz(uint32_t instruction) {
     }
 
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+}
+
+void execute_add_inmediate(uint32_t instruction) {
+    uint32_t rd = (instruction >> 0) & 0x1F;   
+    uint32_t rn = (instruction >> 5) & 0x1F;   
+    uint32_t imm12 = (instruction >> 10) & 0xFFF; 
+    uint32_t shift = (instruction >> 22) & 0x3; 
+
+    uint64_t operand2 = imm12;
+
+    if (shift == 0b01) {
+        operand2 <<= 12;  
+    } 
+
+    uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
+    NEXT_STATE.REGS[rd] = result;       
+    
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+}
+
+void execute_add_extended_register(uint32_t instruction) {
+    uint32_t rd = (instruction >> 0) & 0x1F;   
+    uint32_t rn = (instruction >> 5) & 0x1F;   
+    uint32_t rm = (instruction >> 16) & 0x1F;  
+    uint32_t shift = (instruction >> 22) & 0x3; 
+
+    uint64_t operand2 = CURRENT_STATE.REGS[rm];
+
+    if (shift == 0b01) {
+        operand2 <<= 12;  
+    } 
+
+    uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
+    NEXT_STATE.REGS[rd] = result;
+     
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+}
+
+void execute_mul(uint32_t instruction) {
+    uint32_t rd = (instruction >> 0) & 0x1F;   
+    uint32_t rn = (instruction >> 5) & 0x1F;   
+    uint32_t rm = (instruction >> 16) & 0x1F;  
+
+    uint64_t operand2 = CURRENT_STATE.REGS[rm];
+
+    uint64_t result = CURRENT_STATE.REGS[rn] * operand2;
+
+    NEXT_STATE.REGS[rd] = result;
+     
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+}
+
+void execute_cbz(uint32_t instruction) {
+    uint32_t rt = (instruction >> 0) & 0x1F;   
+    int32_t imm19 = (instruction >> 5) & 0x7FFFF; 
+    int64_t offset = signextend64(imm19, 19) << 2;
+    
+    if (CURRENT_STATE.REGS[rt] == 0) {
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+    } else {
+        NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+    }
+}
+
+void execute_cbnz(uint32_t instruction) {
+    uint32_t rt = (instruction >> 0) & 0x1F;   
+    int32_t imm19 = (instruction >> 5) & 0x7FFFF; 
+    
+    int64_t offset = signextend64(imm19, 19) << 2;
+    
+    if (CURRENT_STATE.REGS[rt] != 0) {
+        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+    } else {
+        NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+    }
 }
