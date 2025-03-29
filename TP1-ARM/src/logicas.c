@@ -15,7 +15,7 @@ void execute_HLT(uint32_t instruction) {
 }
 
 void execute_CMP_inmediate(uint32_t instruction) {
-    uint32_t rn = (instruction >> 5) & 0x1F;     
+    uint32_t rn    = (instruction >> 5)  & 0x1F;     
     uint32_t imm12 = (instruction >> 10) & 0xFFF; 
     uint32_t shift = (instruction >> 22) & 0x3;  
 
@@ -35,8 +35,8 @@ void execute_CMP_inmediate(uint32_t instruction) {
 }
 
 void execute_CMP_extended_register(uint32_t instruction) {
-    uint32_t rn = (instruction >> 5) & 0x1F;   
-    uint32_t rm = (instruction >> 16) & 0x1F; 
+    uint32_t rn    = (instruction >> 5)  & 0x1F;   
+    uint32_t rm    = (instruction >> 16) & 0x1F; 
     uint32_t shift = (instruction >> 22) & 0x3; 
 
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
@@ -55,8 +55,8 @@ void execute_CMP_extended_register(uint32_t instruction) {
 }
 
 void execute_ands_shifted_register(uint32_t instruction) {
-    uint32_t rd = (instruction >> 0) & 0x1F;   
-    uint32_t rn = (instruction >> 5) & 0x1F;  
+    uint32_t rd = (instruction >> 0)  & 0x1F;   
+    uint32_t rn = (instruction >> 5)  & 0x1F;  
     uint32_t rm = (instruction >> 16) & 0x1F;  
 
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
@@ -72,8 +72,8 @@ void execute_ands_shifted_register(uint32_t instruction) {
 }
 
 void execute_eor_shifted_register(uint32_t instruction) {
-    uint32_t rd = (instruction >> 0) & 0x1F;   // Bits 0-4: Rd
-    uint32_t rn = (instruction >> 5) & 0x1F;   // Bits 5-9: Rn
+    uint32_t rd = (instruction >> 0)  & 0x1F;   // Bits 0-4: Rd
+    uint32_t rn = (instruction >> 5)  & 0x1F;   // Bits 5-9: Rn
     uint32_t rm = (instruction >> 16) & 0x1F;  // Bits 16-20: Rm
 
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
@@ -86,8 +86,8 @@ void execute_eor_shifted_register(uint32_t instruction) {
 }
 
 void execute_orr_shifted_register(uint32_t instruction) {
-    uint32_t rd = (instruction >> 0) & 0x1F;   // Bits 0-4: Rd
-    uint32_t rn = (instruction >> 5) & 0x1F;   // Bits 5-9: Rn
+    uint32_t rd = (instruction >> 0)  & 0x1F;   // Bits 0-4: Rd
+    uint32_t rn = (instruction >> 5)  & 0x1F;   // Bits 5-9: Rn
     uint32_t rm = (instruction >> 16) & 0x1F;  // Bits 16-20: Rm
 
     uint64_t operand2 = CURRENT_STATE.REGS[rm];

@@ -7,9 +7,9 @@
 
 
 void execute_stur(uint32_t instruction) {
-    uint32_t rt = (instruction >> 0) & 0x1F;   
-    uint32_t rn = (instruction >> 5) & 0x1F;   
-    int32_t imm9 = (instruction >> 12) & 0x1FF; 
+    uint32_t rt   =  instruction        & 0x1F;   
+    uint32_t rn   = (instruction >> 5)  & 0x1F;   
+    int32_t  imm9 = (instruction >> 12) & 0x1FF; 
     
     imm9 = signextend64(imm9, 9);  
     
@@ -22,9 +22,9 @@ void execute_stur(uint32_t instruction) {
 }
 
 void execute_stur_b(uint32_t instruction) {
-    uint32_t rt = (instruction >> 0) & 0x1F;   
-    uint32_t rn = (instruction >> 5) & 0x1F;   
-    int32_t imm9 = (instruction >> 12) & 0x1FF; 
+    uint32_t rt   =  instruction        & 0x1F;   
+    uint32_t rn   = (instruction >> 5)  & 0x1F;   
+    int32_t  imm9 = (instruction >> 12) & 0x1FF; 
     
     imm9 = signextend64(imm9, 9);
     
@@ -39,9 +39,9 @@ void execute_stur_b(uint32_t instruction) {
 }
 
 void execute_stur_h(uint32_t instruction) {
-    uint32_t rt = (instruction >> 0) & 0x1F;   
-    uint32_t rn = (instruction >> 5) & 0x1F;   
-    int32_t imm9 = (instruction >> 12) & 0x1FF; 
+    uint32_t rt   =  instruction        & 0x1F;   
+    uint32_t rn   = (instruction >> 5)  & 0x1F;   
+    int32_t  imm9 = (instruction >> 12) & 0x1FF; 
     
     imm9 = signextend64(imm9, 9);
     
@@ -56,10 +56,10 @@ void execute_stur_h(uint32_t instruction) {
 }
 
 void execute_ldur(uint32_t instruction) {
-    uint32_t rt = instruction & 0x1F;
-    uint32_t rn = (instruction >> 5) & 0x1F;
-    int64_t imm9 = (instruction >> 12) & 0x1FF;
-    uint8_t size = (instruction >> 30) & 0x3;
+    uint32_t rt   = instruction         & 0x1F;
+    uint32_t rn   = (instruction >> 5)  & 0x1F;
+    int64_t  imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t  size = (instruction >> 30) & 0x3;
 
     imm9 = signextend64(imm9, 9);
     
@@ -75,10 +75,10 @@ void execute_ldur(uint32_t instruction) {
 }
 
 void execute_ldur_h(uint32_t instruction) {
-    uint32_t rt = instruction & 0x1F;
-    uint32_t rn = (instruction >> 5) & 0x1F;
-    int64_t imm9 = (instruction >> 12) & 0x1FF;
-    uint8_t size = (instruction >> 30) & 0x3;
+    uint32_t rt   =  instruction        & 0x1F;
+    uint32_t rn   = (instruction >> 5)  & 0x1F;
+    int64_t  imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t  size = (instruction >> 30) & 0x3;
 
     imm9 = signextend64(imm9, 9);
     
@@ -94,10 +94,10 @@ void execute_ldur_h(uint32_t instruction) {
 }
 
 void execute_ldur_b(uint32_t instruction) {
-    uint32_t rt = instruction & 0x1F;
-    uint32_t rn = (instruction >> 5) & 0x1F;
-    int64_t imm9 = (instruction >> 12) & 0x1FF;
-    uint8_t size = (instruction >> 30) & 0x3;
+    uint32_t rt   =  instruction        & 0x1F;
+    uint32_t rn   = (instruction >> 5)  & 0x1F;
+    int64_t  imm9 = (instruction >> 12) & 0x1FF;
+    uint8_t  size = (instruction >> 30) & 0x3;
 
     imm9 = signextend64(imm9, 9);
     
