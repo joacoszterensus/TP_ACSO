@@ -4,6 +4,8 @@
 #ifndef SIM_H
 #define SIM_H
 
+typedef void (*InstructionFunction)(uint32_t instruction);
+
 
 typedef struct {
     uint32_t opcode;

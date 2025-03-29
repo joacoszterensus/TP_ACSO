@@ -6,7 +6,6 @@
 
 
 
-typedef void (*InstructionFunction)(uint32_t instruction);
 
 
 InstructionEntry instruction_set[] = {

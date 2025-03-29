@@ -1,5 +1,5 @@
-sim: shell.c sim.c arith.c logic.c branch.c memory.c mov.c sim.h
-	gcc -g -O0 shell.c sim.c arith.c logic.c branch.c memory.c mov.c -o sim
+sim: shell.c sim.c aritmeticas.c logicas.c branch.c memoria.c mov.c  utils.c sim.h
+	gcc -g -O0 shell.c sim.c aritmeticas.c logicas.c branch.c memoria.c mov.c utils.c -o sim
 
 
 .PHONY: clean
