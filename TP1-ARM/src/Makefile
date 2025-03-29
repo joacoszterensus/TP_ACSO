@@ -1,4 +1,4 @@
-sim: shell.c sim.c 
+sim: shell.c sim.c  sim.h
 	gcc -g -O0 $^ -o $@
 
 .PHONY: clean
