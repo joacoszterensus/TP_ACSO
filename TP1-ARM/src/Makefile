@@ -1,5 +1,6 @@
-sim: shell.c sim.c  sim.h
-	gcc -g -O0 $^ -o $@
+sim: shell.c sim.c arith.c logic.c branch.c memory.c mov.c sim.h
+	gcc -g -O0 shell.c sim.c arith.c logic.c branch.c memory.c mov.c -o sim
+
 
 .PHONY: clean
 clean:
