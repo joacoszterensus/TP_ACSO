@@ -19,7 +19,7 @@ InstructionEntry instruction_set[] = {
     {0xEA     << 24, 0xFF000000, execute_ands_shifted_register}, 
     {0xCA     << 24, 0xFF000000, execute_eor_shifted_register},  
     {0xAA     << 24, 0xFF000000, execute_orr_shifted_register},  
-    {0x03     << 26, 0xFC000000, execute_b_target},              
+    {0x05     << 26, 0xFC000000, execute_b_target},      //b_target no- beq2 si  -beg si- bgtx
     {0x3587C0 << 10, 0xFFFFFC00, execute_br},   
     {0x54     << 24, 0xFF000000, execute_b_conditional},  
     {0xD3     << 24, 0xFF000000, execute_l_sx},
@@ -41,6 +41,7 @@ InstructionEntry instruction_set[] = {
 
 void process_instruction() {
     uint32_t instruction = mem_read_32(CURRENT_STATE.PC);
+    printf(" instruction: %08X\n",  instruction);
     for (int i = 0; instruction_set[i].execute != NULL; i++) {
         if ((instruction & instruction_set[i].mask) == instruction_set[i].opcode) {
             instruction_set[i].execute(instruction);
