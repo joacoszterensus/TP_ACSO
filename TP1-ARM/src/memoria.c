@@ -109,5 +109,6 @@ void execute_ldur_b(uint32_t instruction) {
     uint64_t data = ((uint64_t) high << 32) | low;
     
     NEXT_STATE.REGS[rt] = data & 0xFF;
+
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }

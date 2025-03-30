@@ -62,8 +62,10 @@ void execute_ands_shifted_register(uint32_t instruction) {
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
 
     uint64_t result = CURRENT_STATE.REGS[rn] & operand2;
-    NEXT_STATE.REGS[rd] = result;
-
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }
     NEXT_STATE.FLAG_N = setFlagN(result);        
     NEXT_STATE.FLAG_Z = setFlagZ(result);             
 
@@ -79,8 +81,10 @@ void execute_eor_shifted_register(uint32_t instruction) {
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
 
     uint64_t result = CURRENT_STATE.REGS[rn] ^ operand2;
-    NEXT_STATE.REGS[rd] = result;
-
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 
 }
@@ -93,6 +97,8 @@ void execute_orr_shifted_register(uint32_t instruction) {
     uint64_t operand2 = CURRENT_STATE.REGS[rm];
 
     uint64_t result = CURRENT_STATE.REGS[rn] | operand2;
-    NEXT_STATE.REGS[rd] = result;
-
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }
 }

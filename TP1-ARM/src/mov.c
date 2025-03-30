@@ -10,9 +10,10 @@ void execute_movz(uint32_t instruction) {
     uint32_t imm16 = (instruction >> 5)  & 0xFFFF; 
     uint32_t hw    = (instruction >> 21) & 0x3;   
     
-    if (hw == 0) {
+    if (hw == 0 && rd != 31) {
         NEXT_STATE.REGS[rd] = imm16;  
     }
+
 
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
@@ -31,7 +32,9 @@ void execute_l_sx(uint32_t instruction) {
     else if (imms != 0b111111) {
         operand2 = CURRENT_STATE.REGS[rn] <<64- shift;
     }
-    NEXT_STATE.REGS[rd] = operand2;
-           
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = operand2;
+        
+    }           
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }

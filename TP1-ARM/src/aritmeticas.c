@@ -16,7 +16,10 @@ void execute_adds_inmediate(uint32_t instruction) {
     } 
 
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
-    NEXT_STATE.REGS[rd] = result;
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        ;
+    }
 
     NEXT_STATE.FLAG_N = setFlagN(result);        
     NEXT_STATE.FLAG_Z = setFlagZ(result);            
@@ -38,8 +41,10 @@ void execute_adds_extended_register(uint32_t instruction) {
     } 
 
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
-    NEXT_STATE.REGS[rd] = result;
-
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }
     NEXT_STATE.FLAG_N = setFlagN(result);        
     NEXT_STATE.FLAG_Z = setFlagZ(result);       
     
@@ -62,7 +67,10 @@ void execute_sub_inmediate(uint32_t instruction) {
     operand2 = ~operand2;  
     int64_t result = CURRENT_STATE.REGS[rn] + operand2 + 1;  
     
-    NEXT_STATE.REGS[rd] = result;
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }
 
     NEXT_STATE.FLAG_N = setFlagN(result);        
     NEXT_STATE.FLAG_Z = setFlagZ(result);            
@@ -84,7 +92,11 @@ void execute_sub_extended_register(uint32_t instruction) {
 
     operand2 = ~operand2;  
     int64_t result = CURRENT_STATE.REGS[rn] + operand2 + 1;  
-    NEXT_STATE.REGS[rd] = result;
+    
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        ;
+    }
 
     NEXT_STATE.FLAG_N = setFlagN(result);        
     NEXT_STATE.FLAG_Z = setFlagZ(result);            
@@ -105,8 +117,10 @@ void execute_add_inmediate(uint32_t instruction) {
     } 
 
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
-    NEXT_STATE.REGS[rd] = result;       
-    
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }    
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
 
@@ -123,8 +137,10 @@ void execute_add_extended_register(uint32_t instruction) {
     } 
 
     uint64_t result = CURRENT_STATE.REGS[rn] + operand2;
-    NEXT_STATE.REGS[rd] = result;
-     
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }     
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
 
@@ -137,7 +153,9 @@ void execute_mul(uint32_t instruction) {
 
     uint64_t result = CURRENT_STATE.REGS[rn] * operand2;
 
-    NEXT_STATE.REGS[rd] = result;
-     
+    if (rd != 31) {
+        NEXT_STATE.REGS[rd] = result;
+        
+    }     
     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
