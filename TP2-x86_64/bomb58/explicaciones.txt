@@ -1,3 +1,6 @@
+Joaquin Szterensus
+jszterensus@udesa.edu.ar
+
 Para desactivar la primera fase de la bomba, analizamos el código fuente y notamos que en la función main, se llama a phase_1 con el string que el usuario ingresa.
 Sabíamos entonces que dentro de phase_1 se debía comparar nuestro input con la respuesta correcta.
 
