@@ -1,0 +1,65 @@
+Para desactivar la primera fase de la bomba, analizamos el código fuente y notamos que en la función main, se llama a phase_1 con el string que el usuario ingresa.
+Sabíamos entonces que dentro de phase_1 se debía comparar nuestro input con la respuesta correcta.
+
+Observamos que una de las primeras instrucciones era un lea rsi, [rip+offset],
+que cargaba en el registro rsi la dirección de memoria donde estaba almacenado el string correcto.
+Esa dirección era luego utilizada como uno de los argumentos en una función llamada strings_not_equal, 
+que comparaba nuestro input (en rdi) con esa string (en rsi).
+Para leer el valor de ese string, inspeccionamos el contenido de rsi con el comando x/s $rsi. 
+Esto nos reveló exactamente cuál era el string correcto que esperaba la bomba para pasar la fase 1 sin explotar.
+
+Al que es amigo, jamas lo dejen en la estacada Siempre el amigo mas fiel es una conduta honrada
+
+
+
+Para resolver la segunda fase, la funcion analiza dos números ingresados por el usuario. 
+Lo primero que realiza la funcion es sumar ambos numeros y restarle 32
+este resultado lo guardaba en esi y llamaba a la funcion misterio, la cual calculaba cuantos bits activados tenia el numero. si este numero no era mayor o igual a 11,
+la bomba explotaba. Luego, aplicaba la funcion xor a ambos numero originales, si este resultado no era negativo, la bomba volvia a explotar
+Un ejemplo de número que cumple esta condición es 8191, ya que en binario es 1111111111111, que tiene 13 unos.
+
+8191 -1
+
+En la tercera fase, la contraseña esperaba dos argumentos: una palabra y un número entero, extraídos con sscanf. 
+Luego, se cargaba un array de palabras desde palabras.txt usando la función readlines, y ambos argumentos se pasaban a la función cuenta.
+Analizando cuenta, vi que implementaba una búsqueda binaria recursiva sobre la lista, comparando la palabra ingresada con las del array.
+En cada llamada se incrementaba un contador, y si superaba 11, la bomba explotaba.
+Al terminar, se comparaba el valor del contador con el número ingresado: si no coincidían, explotaba. 
+Probando con distintas palabras, "abajar" requería exactamente 11 comparaciones para ser localizada,
+por lo que "abajar 11" desactiva la bomba.
+
+abajar 11
+
+
+
+para la ultima fase, la entrada debe cumplir dos condiciones específicas. Primero, la cadena ingresada debe tener exactamente 6 caracteres. 
+Si la longitud es diferente, la bomba explotará inmediatamente. Segundo, cada carácter de la cadena se procesa individualmente. 
+Se toma su valor ASCII y se aplica una máscara AND con 0xF, lo que equivale a tomar los últimos 4 bits del valor ASCII. 
+Este resultado se usa como índice para acceder a un valor en un array oculto llamado array.0. 
+Finalmente, la suma de los 6 valores obtenidos del array debe ser exactamente 61 (0x3D en hexadecimal) para que la bomba no explote.
+
+La cadena "holasa" funciona porque cumple con ambos requisitos. Tiene exactamente 6 caracteres, evitando la primera condición de explosión. 
+Además, al procesar cada carácter, los índices generados y los valores correspondientes en array.0 suman 61. Por ejemplo, la letra 'h' en ASCII es 0x68, 
+y al aplicar la máscara 0xF se obtiene 0x8. Este valor se usa como índice en array.0, donde el valor podría ser 15. Este proceso se repite para cada letra de "holasa", 
+y la suma total de los valores obtenidos es 61, lo que permite desactivar la bomba exitosamente.
+Es importante destacar que los valores específicos de array.0 pueden variar dependiendo del binario, pero en este caso particular, 
+"holasa" genera los índices correctos para lograr la suma requerida.
+
+resultado:
+holasa
+
+fase oculta
+
+analizando un poco el codigo, en Phase defused hay una llamada peculiar sobre una fase secreta,
+a la cual se podria ingresar unicamente luego de ingresar 4 strings
+cmp    DWORD PTR [rip+0xf8bbf],0x4 
+siguiendo con phase defused, se llama a scan f y se le pasan dos parametros, uno era la entrada de la fase 3 y otro era un string el cual indicaba 3 argumentos,
+un str un int y otro str, lo cual los primeros dos coincidian con la fase 3.
+Por lo tanto para desbloquear la fase secreta habia que incluir una palabra mas en la entrada de la fase 3.
+esta entrada la conseguimos viendo con que se comparaba mas adelante el tercer argumento.lo cual era :
+
+abrete_sesamo
+
+la fase oculta consistia en lograr que la salida de una funcion "fun7" sea 5. Esta funcion recibia un numero,
+y devolvia la profundidad en la que se encontraba tal numero. asi que para pasar esta fase simplemente navegamos por el arbol hasta llegar a la profundidad 5,
+y uno de los numeros en esa profundidad era el 47, el cual lograba defusear la bomba
