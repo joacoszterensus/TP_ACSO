@@ -16,6 +16,12 @@
 #include <vector>      // for vector
 #include "Semaphore.h" // for Semaphore
 
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <atomic>
+
+
 using namespace std;
 
 
@@ -29,11 +35,11 @@ using namespace std;
  * worker to process.
  */
 typedef struct worker {
-    thread ts;
-    function<void(void)> thunk;
-    /**
-     * Complete the definition of the worker_t struct here...
-     **/
+    thread thread;
+        Semaphore sem;
+        function<void(void)> task;
+        bool available;
+     
 } worker_t;
 
 class ThreadPool {
@@ -67,13 +73,23 @@ class ThreadPool {
     ~ThreadPool();
     
   private:
-
-    void worker(int id);
     void dispatcher();
-    thread dt;                              // dispatcher thread handle
-    vector<worker_t> wts;                   // worker thread handles. you may want to change/remove this
-    bool done;                              // flag to indicate the pool is being destroyed
-    mutex queueLock;                        // mutex to protect the queue of tasks
+    void workerLoop(size_t id);
+
+    std::vector<worker_t> workers;
+    std::thread dispatcherThread;
+
+    std::mutex queueMutex;
+    std::condition_variable_any taskAvailable;
+    std::queue<std::function<void(void)>> tasks;
+
+    Semaphore workersAvailable;
+    std::atomic<size_t> tasksPending;
+
+    std::mutex waitMutex;
+    std::condition_variable_any waitCv;
+
+    std::atomic<bool> done;
 
     /* It is incomplete, there should be more private variables to manage the structures... 
     * *
