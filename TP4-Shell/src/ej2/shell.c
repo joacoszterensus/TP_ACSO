@@ -9,6 +9,9 @@
 #define MAX_COMMANDS 200
 #define MAX_ARGS 64
 
+ char *strdup(const char *s);
+
+
 void separador(char *s) {
     while (*s == ' ' || *s == '\t') s++;
     char *end = s + strlen(s) - 1;
